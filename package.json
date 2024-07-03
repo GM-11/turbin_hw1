@@ -1,0 +1,15 @@
+{
+  "name": "turbin_hw1",
+  "version": "1.0.0",
+  "main": "index.js",
+  "license": "MIT",
+  "dependencies": {
+    "@solana/web3.js": "^1.94.0",
+    "@types/node": "^20.14.9",
+    "bs58": "^6.0.0",
+    "typescript": "^5.5.3"
+  },
+  "devDependencies": {
+    "ts-node": "^10.9.2"
+  }
+}
