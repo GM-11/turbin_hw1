@@ -1,25 +1,37 @@
-import { Connection, Keypair, PublicKey, SystemProgram, Transaction, sendAndConfirmTransaction } from '@solana/web3.js';
+import { Transaction, SystemProgram, Connection, Keypair, LAMPORTS_PER_SOL, sendAndConfirmTransaction, PublicKey } from "@solana/web3.js"
 
-export async function transferSOL(sender: Keypair,  recipientAddress: string, amount: number): Promise<void> {
-    const connection = new Connection('https://api.mainnet-beta.solana.com');
+import wallet from "./dev-wallet.json"
 
-    // Create a new public key for the recipient address
-    const recipientPublicKey = new PublicKey(recipientAddress);
+// Import our dev wallet keypair from the wallet file
+const from = Keypair.fromSecretKey(new Uint8Array(wallet));
 
-    // Create a new transaction
-    const transaction = new Transaction().add(
-        // Add the transfer instruction
-        SystemProgram.transfer({
-            fromPubkey: sender.publicKey,
-            toPubkey: recipientPublicKey,
-            lamports: amount * 10 ** 9, // Convert SOL to lamports
-        })
-    );
+// Define Second Account Public Key
+const to = Keypair.generate();
+const connection = new Connection("https://api.devnet.solana.com");
 
-    // Sign the transaction with the sender's private key
-    transaction.feePayer = sender.publicKey;
 
-    // Send and confirm the transaction
-    await sendAndConfirmTransaction(connection, transaction, [sender]);
-}
 
+(async () => {
+    try {
+        const transaction = new Transaction().add(
+            SystemProgram.transfer({
+                fromPubkey: from.publicKey,
+                toPubkey:  to.publicKey,
+                lamports: LAMPORTS_PER_SOL/100,
+            })
+        );
+        transaction.recentBlockhash = (await connection.getLatestBlockhash('confirmed')).blockhash;
+        transaction.feePayer = from.publicKey;
+        
+        // Sign transaction, broadcast, and confirm
+        const signature = await sendAndConfirmTransaction(
+            connection,
+            transaction,
+            [from]
+        );
+        console.log(`Success! Check out your TX here: 
+        https://explorer.solana.com/tx/${signature}?cluster=devnet`);
+    } catch(e) {
+        console.error(`Oops, something went wrong: ${e}`)
+    }
+})();
